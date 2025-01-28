@@ -1,0 +1,19 @@
+{
+  "name": "hub_api",
+  "module": "./src/index.ts",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "start": "bun ./src/index.ts",
+    "dev": "bun --watch ./src/index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7"
+  }
+}

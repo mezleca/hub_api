@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <button id="send">send</button>
+    <script>
+        const API_URL = 'http://localhost:8080';
+        const send = document.getElementById('send');
+
+        // Add file input element
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        document.body.insertBefore(fileInput, send);
+
+        send.addEventListener('click', () => {
+            if (!fileInput.files[0]) {
+            alert('Please select an image first');
+            return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            fetch(`${API_URL}/balls`, {
+            method: 'POST',
+            body: formData
+            })
+            .then(response => response.text())
+            .then(data => console.log(data))
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+</body>
+</html>
