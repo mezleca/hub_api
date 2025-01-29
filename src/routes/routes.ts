@@ -1,5 +1,5 @@
-import { balls } from "./upload";
+import { pictures } from "./upload";
 
 export const routes: any = {
-    "/balls": balls
+    "/upload/picture": pictures
 };
