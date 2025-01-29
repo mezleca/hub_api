@@ -1,7 +1,12 @@
 import dontenv from 'dotenv';
+
 import { routes } from './routes/routes';
+import { MongoDB } from './services/mongo';
 
 dontenv.config();
+
+const mongo = MongoDB.get_instance();
+await mongo.connect();
 
 Bun.serve({
     port: process.env.SERVER_PORT || 3000,

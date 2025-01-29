@@ -1,5 +1,13 @@
 import { BucketService } from "../services/bucket";
 
+/*
+    - video upload pseudo (preguica do caralho):
+        usuario envia uma nova requisicao para /upload/video, a requisicao deve conter informacoes tipo: nome do arquivo, tamanho, tipo, etc...
+        essas informacoes vao ser salva temporariamente no banco de dados, e o usuario vai receber um token.
+        o token vai ser usado para fazer a verificacao do upload na rota /upload/video/:token.
+        o usuario vai enviar o video em chunks, e o servidor vai ir junatando esses chunks no bucket aos poucos.
+*/
+
 export const MAX_IMAGE_SIZE = 1024 * 1024 * 5; // 5MB
 export const MAX_VIDEO_SIZE = 1024 * 1024 * 1024; // 1GB obs: isso nao e pra ficar aqui, ja que o video vai ser enviado como stream
 
