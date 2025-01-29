@@ -51,10 +51,6 @@ export const check_media_type = (file: FormDataEntryValue, _type: media_types) =
 
 export const pictures = async (req: Request) => {
 
-    if (req.method !== "POST") {
-        return new Response("Hey", { status: 405 });
-    }
-
     const content_type = req.headers.get("content-type")?.split(";");
 
     if (!content_type?.includes("multipart/form-data")) {

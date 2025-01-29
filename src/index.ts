@@ -29,8 +29,20 @@ Bun.serve({
             });
         }
 
+        // make sure the method is valid
+        if (route.method !== req.method) {
+            return new Response('Method Not Allowed', { 
+                status: 405,
+                headers: {
+                    'Content-Type': 'text/plain',
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
+                }
+            });
+        }
+
         // execute the route callback
-        const response = await route(req);
+        const response = await route.callback(req);
 
         // set the CORS headers
         response.headers.set('Access-Control-Allow-Origin', '*');
