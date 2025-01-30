@@ -1,3 +1,7 @@
+import mongoose from "mongoose";
+const jwt = require("jsonwebtoken");
+
+import { user_schema } from "../models/user";
 import { BucketService } from "../services/bucket";
 
 /*
@@ -11,7 +15,9 @@ import { BucketService } from "../services/bucket";
 export const MAX_IMAGE_SIZE = 1024 * 1024 * 5; // 5MB
 export const MAX_VIDEO_SIZE = 1024 * 1024 * 1024; // 1GB obs: isso nao e pra ficar aqui, ja que o video vai ser enviado como stream
 
-const bucket = new BucketService(
+const User = mongoose.model("User", user_schema);
+const upload_task = new Map();
+export const bucket = new BucketService(
     process.env.BUCKET_ACCESS_ID, 
     process.env.BUCKET_SECRET_KEY, 
     "hubshit"
@@ -52,6 +58,12 @@ export const check_media_type = (file: FormDataEntryValue, _type: media_types) =
 export const pictures = async (req: Request) => {
 
     const content_type = req.headers.get("content-type")?.split(";");
+    const access_token = req.headers.get("Authorization");
+
+    if (!access_token) {
+        console.log("no token received")
+        return new Response("Unauthorized", { status: 401 });
+    }
 
     if (!content_type?.includes("multipart/form-data")) {
         return new Response("Unsupported Media Type", { status: 415 });
@@ -72,6 +84,30 @@ export const pictures = async (req: Request) => {
             return new Response("payload Too Large", { status: 413 });
         }
 
+        const user_id = mongoose.Types.ObjectId.createFromHexString(jwt.verify(access_token, process.env.JWT_SECRET).user_id);
+        const user = await User.findOneAndUpdate(
+            { "_id": user_id },
+            { pfp: file.self.name },
+            { new: true } // Isso retorna o documento atualizado
+        );
+
+        /* LOGS:
+        {
+            acknowledged: true,
+            modifiedCount: 0,  
+            upsertedId: null,  
+            upsertedCount: 0,  
+            matchedCount: 1,   
+        }
+        */
+
+        console.log(user, file.self.name);
+
+        if (!user) {
+            console.log("user not found");
+            return new Response("User Not Found", { status: 404 });
+        }   
+        
         const result = bucket.add_file(file.self.name, data);
 
         if (!result) {
@@ -83,4 +119,27 @@ export const pictures = async (req: Request) => {
         console.error(err);
         return new Response("Internal Server Error", { status: 500 });
     }
+};
+
+const videos = async (req: Request) => {
+
+    const content_type = req.headers.get("content-type")?.split(";");
+    const access_token = req.headers.get("Authorization");
+
+    if (!access_token) {
+        console.log("no token received")
+        return new Response("Unauthorized", { status: 401 });
+    }
+    
+    if (!content_type?.includes("application/json")) {
+        return new Response("Unsupported Media Type", { status: 415 });
+    }
+
+    const { title, description, format } = await req.json();
+
+    if (!title || !format)  {
+        return new Response("Invalid Payload", { status: 400 });
+    }
+
+
 };

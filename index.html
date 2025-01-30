@@ -6,20 +6,135 @@
     <title>Document</title>
 </head>
 <body>
-    <button id="send">send</button>
+    <div id="status"></div>
+    <img id="image_preview" src=""></img>
+    <button id="logout" onclick="clear_token()">logout</button>
+    <button id="send">send picture</button>
+    <form id="login_form">
+        <br>
+        <select id="form_type" onchange="update_form_title()">
+            <option value="login">Login</option>
+            <option value="register">Register</option>
+        </select>
+        <h2 id="form_title">Login</h2>
+        <input type="text" id="username" placeholder="Username" required><br>
+        <input type="email" id="email" placeholder="Email" required><br>
+        <input type="password" id="password" placeholder="Password" required><br>
+        <button id="submit_btn" type="submit">login</button>
+    </form>
+
     <script>
-        // ai generated shit test because i hate postman
 
         const API_URL = 'http://localhost:8080';
         const send = document.getElementById('send');
+        const image_preview = document.getElementById("image_preview");
 
-        // Add file input element
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
         fileInput.accept = 'image/*';
+        
         document.body.insertBefore(fileInput, send);
 
+        function update_form_title() {
+            const form_type = document.getElementById('form_type').value;
+            const form_title = document.getElementById('form_title');
+            const submit_button = document.getElementById('submit_btn');
+            
+            form_title.textContent = form_type === 'login' ? 'Login' : 'Register';
+            submit_button.textContent = form_type.toLowerCase();
+        }
+        
+        function check_login_status() {
+            const status = document.getElementById('status');
+            const has_token = document.cookie.includes('access_token');
+            status.textContent = has_token ? 'logged In' : 'not logged In';
+            status.style.color = has_token ? 'green' : 'red';
+        }
+
+        check_login_status();
+
+        function handle_login_response(data) {
+           
+            if (!data?.token) {
+                console.log("failed to get token");
+                return;
+            }
+
+            document.cookie = `access_token=${data.token}`;
+        }
+
+        async function get_info() {
+
+            try {
+
+                const response = await fetch(`${API_URL}/user/info?username=rel`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': get_token()
+                    }
+                });
+
+                const data = await response.json();
+                console.log(data);
+
+                image_preview.src = data.user.pfp;
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        get_info();
+
+        function clear_token() {
+            document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            check_login_status();
+        }
+
+        function get_token () {
+            const token = document.cookie.split(';').find(cookie => cookie.includes('access_token'));
+            return token ? token.split('=')[1] : null;
+        }
+
+        const login_form = document.getElementById('login_form');
+        login_form.addEventListener('submit', async (e) => {
+
+            e.preventDefault();
+
+            console.log("clicked");
+
+            const form_type = document.getElementById('form_type').value;
+            const endpoint = form_type === 'login' ? '/auth/login' : '/auth/create';
+
+            const form_data = {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value
+            };
+
+            try {
+                const response = await fetch(`${API_URL}${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(form_data)
+                });
+                const data = await response.json();
+                handle_login_response(data);
+                check_login_status();
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+
         send.addEventListener('click', () => {
+
+            const token = get_token();
+
+            if (!token) {
+                alert('Please login first');
+                return;
+            }
 
             if (!fileInput.files[0]) {
                 alert('Please select an image first');
@@ -31,7 +146,10 @@
 
             fetch(`${API_URL}/upload/picture`, {
                 method: 'POST',
-                body: formData
+                body: formData,
+                headers: {
+                    "Authorization": `${token}`
+                }
             })
             .then(response => response.text())
             .then(data => console.log(data))

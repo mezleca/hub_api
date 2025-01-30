@@ -48,13 +48,20 @@ export const login = async (req: Request) => {
         return new Response("User Not Found", { status: 404 });
     }
 
+    console.log("logging as ", user, "\n");
+
     const valid = await Bun.password.verify(password, user.password);
 
     if (!valid) {
         return new Response("Unauthorized", { status: 401 });
     }
 
-    const token: number = jwt.sign({ user_id: user._id}, process.env.JWT_SECRET, { expiresIn: "24h" });
-
-    return new Response("OK", { status: 200, headers: { "Authorization": token } });
+    const token = jwt.sign({ user_id: user._id}, process.env.JWT_SECRET, { expiresIn: "24h" });
+    
+    return new Response(JSON.stringify({ token }), { 
+        status: 200,
+        headers: {
+            "Content-Type": "application/json"
+        }
+    });
 }
