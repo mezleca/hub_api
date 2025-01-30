@@ -61,13 +61,14 @@
             }
 
             document.cookie = `access_token=${data.token}`;
+            window.location.reload();
         }
 
         async function get_info() {
 
             try {
 
-                const response = await fetch(`${API_URL}/user/info?username=rel`, {
+                const response = await fetch(`${API_URL}/user/info`, {
                     method: 'GET',
                     headers: {
                         'Authorization': get_token()
@@ -87,7 +88,7 @@
 
         function clear_token() {
             document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-            check_login_status();
+            window.location.reload();
         }
 
         function get_token () {

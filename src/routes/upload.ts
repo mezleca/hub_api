@@ -88,20 +88,8 @@ export const pictures = async (req: Request) => {
         const user = await User.findOneAndUpdate(
             { "_id": user_id },
             { pfp: file.self.name },
-            { new: true } // Isso retorna o documento atualizado
+            { new: true }
         );
-
-        /* LOGS:
-        {
-            acknowledged: true,
-            modifiedCount: 0,  
-            upsertedId: null,  
-            upsertedCount: 0,  
-            matchedCount: 1,   
-        }
-        */
-
-        console.log(user, file.self.name);
 
         if (!user) {
             console.log("user not found");
