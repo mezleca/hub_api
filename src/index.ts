@@ -15,7 +15,7 @@ Bun.serve({
         const url = new URL(req.url);
         const route = routes[url.pathname];
 
-        console.log(url.pathname);
+        // console.log(url.pathname);
 
         // cors shit
         if (req.method == 'OPTIONS') {
@@ -24,7 +24,7 @@ Bun.serve({
                 headers: {
                     'Access-Control-Allow-Origin': '*',
                     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-                    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+                    'Access-Control-Allow-Headers': 'Content-Type, Authorization, task-id',
                     'Access-Control-Max-Age': '86400',
                 }
             });

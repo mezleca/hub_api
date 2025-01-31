@@ -1,0 +1,35 @@
+body {
+    background-color: #1a1a1a;
+    color: #ffffff;
+}
+input, select, button {
+    background-color: #333333;
+    color: #ffffff;
+    border: 1px solid #444444;
+    padding: 5px;
+    margin: 5px;
+    border-radius: 4px;
+}
+button:hover {
+    background-color: #444444;
+    cursor: pointer;
+}
+#image_preview {
+    max-width: 300px;
+    border: 1px solid #444444;
+    margin: 10px 0;
+}
+#form_title {
+    margin: 10px 0;
+}
+form {
+    margin: 20px 0;
+}
+select {
+    width: 200px;
+}
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    width: 190px;
+}

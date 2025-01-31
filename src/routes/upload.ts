@@ -2,28 +2,24 @@ import mongoose from "mongoose";
 const jwt = require("jsonwebtoken");
 
 import { user_schema } from "../models/user";
-import { BucketService } from "../services/bucket";
-
-/*
-    - video upload pseudo (preguica do caralho):
-        usuario envia uma nova requisicao para /upload/video, a requisicao deve conter informacoes tipo: nome do arquivo, tamanho, tipo, etc...
-        essas informacoes vao ser salva temporariamente no banco de dados, e o usuario vai receber um token.
-        o token vai ser usado para fazer a verificacao do upload na rota /upload/video/:token.
-        o usuario vai enviar o video em chunks, e o servidor vai ir junatando esses chunks no bucket aos poucos.
-*/
+import { video_schema } from "../models/upload";
+import { BucketService } from "../services/bucket"
 
 export const MAX_IMAGE_SIZE = 1024 * 1024 * 5; // 5MB
-export const MAX_VIDEO_SIZE = 1024 * 1024 * 1024; // 1GB obs: isso nao e pra ficar aqui, ja que o video vai ser enviado como stream
+export const MAX_CHUNK_SIZE = 1024 * 1024 * 3; // 3MB
+export const MAX_VIDEO_SIZE = 1024 * 1024 * 1024; // 1GB
 
 const User = mongoose.model("User", user_schema);
+const Video = mongoose.model("Video", video_schema);
+
 const upload_task = new Map();
+
 export const bucket = new BucketService(
     process.env.BUCKET_ACCESS_ID, 
     process.env.BUCKET_SECRET_KEY, 
     "hubshit"
 );
 
-// ?
 export enum media_types {
     image = "image",
     video = "video"
@@ -109,25 +105,112 @@ export const pictures = async (req: Request) => {
     }
 };
 
-const videos = async (req: Request) => {
+export const process_video = async (req: Request) => {
 
     const content_type = req.headers.get("content-type")?.split(";");
-    const access_token = req.headers.get("Authorization");
+    const task_id = req.headers.get("task-id");
 
-    if (!access_token) {
-        console.log("no token received")
-        return new Response("Unauthorized", { status: 401 });
-    }
-    
-    if (!content_type?.includes("application/json")) {
+    if (!content_type?.includes("application/octet-stream") || !task_id) {
         return new Response("Unsupported Media Type", { status: 415 });
     }
 
-    const { title, description, format } = await req.json();
+    const task = upload_task.get(task_id);
+    
+    if (!task) {
+        return new Response("Task not found", { status: 404 });
+    }
 
-    if (!title || !format)  {
+    if (task.size >= MAX_VIDEO_SIZE) {
+        upload_task.set(task_id, { ...task, status: 'failed' });
+        return new Response("File too large", { status: 413 });
+    }
+
+    try {
+
+        const chunk = await req.arrayBuffer();
+        task.size +=  chunk.byteLength;
+        
+        if (task.size > MAX_VIDEO_SIZE) {
+            upload_task.delete(task_id);
+            return new Response("file too large", { status: 413 });
+        }
+
+        const result = await bucket.append_to_stream(`${task_id}.${task.format}`, chunk, task.size == task.total_size);
+
+        // last chunk
+        if (result?.finished || task.size == task.total_size) {
+            upload_task.delete(task_id);
+            return new Response("finished", { status: 200 });
+        }
+
+        if (!result) {
+            upload_task.delete(task_id);
+            return new Response("Internal Server Error", { status: 500 });
+        }
+
+        return new Response(JSON.stringify({ size: task.size }), {
+            status: 201,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    } catch (err) {
+        console.error(`Failed to process video chunk ${task_id}:`, err);
+        upload_task.set(task_id, { ...task, status: 'failed' });
+        return new Response("Internal Server Error", { status: 500 });
+    }
+};
+
+export const videos = async (req: Request) => {
+
+    const access_token = req.headers.get("Authorization");
+
+    if (!access_token) {
+        return new Response("Unauthorized", { status: 401 });
+    }
+
+    const { title, description, format, total_size: size } = await req.json();
+
+    if (!title || !size || !format)  {
         return new Response("Invalid Payload", { status: 400 });
     }
 
+    if (size > MAX_VIDEO_SIZE) {
+        return new Response("File too large", { status: 413 });
+    }
 
+    const task_id = crypto.randomUUID();
+    const user_id = jwt.verify(access_token, process.env.JWT_SECRET).user_id;
+
+    upload_task.set(task_id, {
+        user_id,
+        title,
+        description,
+        format,
+        size: 0,
+        total_size: size,
+        status: 'pending'
+    });
+
+    try {
+
+        const new_video = new Video({
+            title,
+            description,
+            format,
+            size,
+            created_by: user_id,
+            task_id,
+            status: "pending"
+        });
+
+        await new_video.save();
+    } catch(err) {
+        console.error(err);
+        upload_task.delete(task_id);
+        return new Response("Internal Server Error", { status: 500 });
+    }
+
+    return new Response(JSON.stringify({ token: task_id }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+    });
 };
