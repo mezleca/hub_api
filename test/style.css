@@ -33,3 +33,19 @@ input[type="email"],
 input[type="password"] {
     width: 190px;
 }
+.container {
+    display: flex;
+    flex-direction: column;
+    width: 25%;
+    padding: 10px;
+    height: auto;
+    border: 1px solid grey;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+h1, h2 {
+    font-family: Arial, Helvetica, sans-serif;
+}

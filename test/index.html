@@ -8,25 +8,36 @@
 </head>
 <body>
     <div id="status"></div>
-    <form id="file_form">
-        <input type="file" id="file_input" required>
-        <button id="thing" type="submit">Submit File</button>
-    </form>
-    <img id="image_preview" src=""></img>
     <button id="logout" onclick="clear_token()">logout</button>
-    <button id="send">send picture</button>
-    <form id="login_form">
-        <br>
-        <select id="form_type" onchange="update_form_title()">
-            <option value="login">Login</option>
-            <option value="register">Register</option>
-        </select>
-        <h2 id="form_title">Login</h2>
-        <input type="text" id="username" placeholder="Username" required><br>
-        <input type="email" id="email" placeholder="Email" required><br>
-        <input type="password" id="password" placeholder="Password" required><br>
-        <button id="submit_btn" type="submit">login</button>
-    </form>
+    <img id="image_preview" src=""></img>
+    <div class="container">
+        <h2>video submit</h2>
+        <form id="file_form">
+            <input type="file" id="file_input" required>
+            <button id="thing" type="submit">Submit File</button>
+        </form>
+    </div>
+    <div class="container">
+        <h2>pfp submit</h2>
+        <input type="file" name="" id="pfp_file_input" accept="image/*">
+        <button id="send">send picture</button>
+    </div>
+    <div class="container">
+        <form id="login_form">
+            <h2>login shit</h2>
+            <br>
+            <p>form type</p>
+            <select id="form_type" onchange="update_form_title()">
+                <option value="login">Login</option>
+                <option value="register">Register</option>
+            </select>
+            <h2 id="form_title">Login</h2>
+            <input type="text" id="username" placeholder="Username" required><br>
+            <input type="email" id="email" placeholder="Email" required><br>
+            <input type="password" id="password" placeholder="Password" required><br>
+            <button id="submit_btn" type="submit">login</button>
+        </form>
+    </div> 
     <script src="script.js"></script>
 </body>
 </html>

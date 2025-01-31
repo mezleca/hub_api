@@ -93,11 +93,7 @@ thing.addEventListener("click", async (e) => {
     alert("finished uploading media");
 });
 
-const fileInput = document.createElement('input');
-fileInput.type = 'file';
-fileInput.accept = 'image/*';
-
-document.body.insertBefore(fileInput, send);
+const fileInput = document.getElementById("pfp_file_input");
 
 function update_form_title() {
     const form_type = document.getElementById('form_type').value;
@@ -199,6 +195,8 @@ send.addEventListener('click', () => {
         alert('Please login first');
         return;
     }
+
+    console.log(fileInput);
 
     if (!fileInput.files[0]) {
         alert('Please select an image first');
